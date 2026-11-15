@@ -1,0 +1,40 @@
+{
+  "site_id": "site_8f3k2m1q",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8855,
+    "signature_header": "X-PeeStream-Signature",
+    "dedupe_ttl_hours": 72,
+    "max_body_bytes": 1048576,
+    "webhook_secret": "REPLACE_ME_WITH_THE_SECRET_FROM_SITES_REGISTER"
+  },
+  "db_path": "data/connector.sqlite3",
+  "log_path": "logs/connector.log",
+  "actions": {
+    "shell": {
+      "enabled": false,
+      "command": ["/usr/local/bin/my-cms-import"],
+      "mode": "stdin",
+      "timeout_seconds": 120,
+      "pass_env": {
+        "CMS_API_URL": "http://127.0.0.1:8080/api/import"
+      }
+    },
+    "webhook": {
+      "enabled": false,
+      "url": "http://127.0.0.1:8090/internal/publish",
+      "timeout_seconds": 15,
+      "extra_headers": {
+        "X-Internal-Token": "REPLACE_ME"
+      },
+      "resign_internal": false,
+      "internal_secret": ""
+    },
+    "json_sink": {
+      "enabled": true,
+      "directory": "data/items",
+      "index_sqlite": true,
+      "sqlite_path": "data/catalog.sqlite3"
+    }
+  }
+}

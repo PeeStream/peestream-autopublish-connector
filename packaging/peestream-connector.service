@@ -1,0 +1,52 @@
+# PeeStream AutoPublish standalone connector.
+# Install:
+#   useradd --system --home /opt/peestream-connector --shell /usr/sbin/nologin peestream
+#   cp -r peestream_connector /opt/peestream-connector/
+#   cp config.json /etc/peestream-connector/config.json ; chmod 600 ...
+#   install -m 0644 peestream-connector.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now peestream-connector
+#
+# The webhook secret belongs in an environment file readable only by root and the
+# service user (mode 0600). Never put it on the command line: /proc/*/cmdline is
+# world readable.
+
+[Unit]
+Description=PeeStream AutoPublish connector (HMAC webhook receiver)
+Documentation=https://peestream.com
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=peestream
+Group=peestream
+WorkingDirectory=/opt/peestream-connector
+Environment=PYTHONUNBUFFERED=1
+Environment=PEESTREAM_CONNECTOR_CONFIG=/etc/peestream-connector/config.json
+Environment=PYTHONPATH=/opt/peestream-connector
+# Relative paths in config.json resolve against WorkingDirectory; point db_path,
+# log_path and the json_sink directory at /var/lib/peestream-connector (the
+# StateDirectory below) so they stay writable under ProtectSystem=strict.
+# EnvironmentFile=-/etc/peestream-connector/secret.env
+ExecStart=/usr/bin/python3 -m peestream_connector serve
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/peestream-connector
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+UMask=0077
+StateDirectory=peestream-connector
+LogsDirectory=peestream-connector
+
+[Install]
+WantedBy=multi-user.target
